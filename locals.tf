@@ -5,4 +5,8 @@ locals {
   }
 
   #s3_bucket_name = "globo-web-app-${random_integer.s3.result}"
+
+  
 }
+
+

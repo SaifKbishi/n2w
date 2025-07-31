@@ -16,8 +16,8 @@ resource "aws_instance" "n2w_440_SC" {
   instance_type          = var.instance_type
   subnet_id              = aws_subnet.n2w_public_subnet.id
   vpc_security_group_ids = [aws_security_group.main_sg.id]
-  iam_instance_profile   = aws_iam_instance_profile.nginx_profile.name
-  depends_on             = [aws_iam_role_policy.allow_s3_all]
+  iam_instance_profile   = aws_iam_instance_profile.n2w_profile.name
+  depends_on             = [aws_iam_role_policy.allow_n2w_permissions]
 
   user_data = <<EOF
 #! /bin/bash
@@ -42,6 +42,42 @@ EOF
 
 }
 
+#
+resource "aws_iam_role" "n2w_role" {
+  name = "n2w_role"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+
+  tags = local.common_tags
+}
+
+resource "aws_iam_instance_profile" "n2w_profile" {
+  name = "n2w_profile"
+  role = aws_iam_role.n2w_role.name
+
+  tags = local.common_tags
+}
+
+resource "aws_iam_role_policy" "allow_n2w_permissions" {
+  name = "allow_n2w_permissions"
+  role = aws_iam_role.n2w_role.name
+
+  policy = jsondecode(local.merged_policy)
+}
 
 
 
